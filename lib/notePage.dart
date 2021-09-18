@@ -1,7 +1,8 @@
 import 'package:animation/models/noteModel.dart';
 import 'package:animation/noteDetailPage.dart';
+import 'package:animation/widgets/grid.dart';
+import 'package:animation/widgets/list.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 enum WhyFarther { liste, grille, selfStarter}
 
@@ -20,7 +21,6 @@ class _NotePageState extends State<NotePage> {
   Color color3 = Colors.grey.shade100;
   bool list = false;
   bool darkMode = false;
-  var _tapPosition;
   WhyFarther _selection = WhyFarther.grille;
 
   String _searchText = "";
@@ -43,10 +43,6 @@ class _NotePageState extends State<NotePage> {
   void initState() {
     super.initState();
     _filter.addListener(() { _function();});
-  }
-
-  void _storePosition(TapDownDetails details) {
-    _tapPosition = details.globalPosition;
   }
 
   @override
@@ -77,17 +73,17 @@ class _NotePageState extends State<NotePage> {
                 style: TextStyle(color: color2),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: darkMode ? Colors.white38 : Colors.white,
+                  fillColor: darkMode ? Colors.white30 : Colors.grey[100],
                   hintStyle: TextStyle( color: darkMode ? Colors.white70 :  Colors.black38),
                   prefixIcon: Icon(Icons.search, color: darkMode ? Colors.white60 : Colors.black45,),
                   hintText: "Search...",
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide: BorderSide( color: darkMode ? Colors.white38 :  Colors.grey.shade400, width: 1)
+                    borderSide: BorderSide( color: darkMode ? Colors.white30 :  Colors.grey.shade100, width: 1)
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide: BorderSide( color: darkMode ? Colors.white38 :  Colors.grey.shade400, width: 1)
+                    borderSide: BorderSide( color: darkMode ? Colors.white30 :  Colors.grey.shade100, width: 1)
                   )
                 ),
               ),
@@ -112,7 +108,7 @@ class _NotePageState extends State<NotePage> {
   }
   Widget buildPopMenu(){
     return PopupMenuButton<WhyFarther>(
-      icon: Icon(Icons.menu, color: color1),
+      icon: Icon(Icons.more_vert, color: color2),
       color : darkMode ? Colors.black38 : Colors.white,
       onSelected: (WhyFarther result) {setState((){_selection = result;});},
       itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
@@ -138,7 +134,7 @@ class _NotePageState extends State<NotePage> {
                     if(darkMode){
                       color1 = Colors.black87;
                       color2 = Colors.white;
-                      color3 = Colors.white;
+                      color3 = Colors.white12;
                     }
                     else{
                       color1 = Colors.white;
@@ -174,150 +170,10 @@ class _NotePageState extends State<NotePage> {
             else
               notes.add(snapshot.data![i]);
           }                
-          if (_selection == WhyFarther.grille) return GridView.builder(
-            shrinkWrap: true,
-            itemCount: notes.length,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).orientation == Orientation.landscape ? 3 : 2,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 13,
-              //childAspectRatio: (2/1)
-            ),
-            itemBuilder: (context, index){
-              return GestureDetector(
-                onLongPress: (){
-                  final RenderBox overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
-                  showMenu(
-                    color: darkMode ? Colors.grey : Colors.white,
-                    context: context,
-                    position: RelativeRect.fromRect(
-                      _tapPosition & const Size(40, 40), // smaller rect, the touch area
-                      Offset.zero & overlay.size   // Bigger rect, the entire screen
-                    ),
-                    items: <PopupMenuEntry<WhyFarther>>[
-                      PopupMenuItem<WhyFarther>(
-                        value: WhyFarther.liste,
-                        child: ListTile(
-                          onTap: ()async{
-                            await db.deleteNote(notes[index].id ?? 0);
-                            setState((){});
-                          },
-                          title: Text('Delete', style: TextStyle(color: color2))
-                        ),               
-                      ),
-                      PopupMenuItem<WhyFarther>(
-                        value: WhyFarther.grille,
-                        child: ListTile(
-                          onTap: ()async{
-                            await Navigator.push(context,MaterialPageRoute(builder : (context){return NoteDetailPage(database: db, update: true, index: index);}));
-                            setState((){});
-                          },
-                          title: Text('Edit', style: TextStyle(color: color2))
-                        ),   
-                      ),                       
-                    ],
-                  );
-                },
-                onTapDown: _storePosition,
-                onTap: () async{
-                    await Navigator.push(context,MaterialPageRoute(builder : (context){return NoteDetailPage(database: db, update: true, index: index);}));
-                    setState(() {
-
-                    });
-                },
-                child: Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                color: darkMode ? Colors.white24 : Colors.grey.shade100,
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 200, maxHeight: 150),
-                  padding: EdgeInsets.all(10),
-                  child: Column(
-                    children: <Widget>[
-                      Text(notes[index].title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color2)),
-                      SizedBox(height: 5,),
-                      Expanded(child: Text(notes[index].content,overflow: TextOverflow.fade, style: TextStyle(fontSize: 16, color: color2))),
-                      SizedBox(height: 5,),
-                      Text(DateFormat.yMMMEd().format(notes[index].date), style: TextStyle(fontSize: 12, color: color2, fontWeight: FontWeight.w300))
-                    ]
-                  ),
-                )
-                  )
-              );
-            },
-          );
-          else return ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: notes.length,
-            itemBuilder: (context, index){
-              return GestureDetector(
-                 onLongPress: (){
-                  final RenderBox overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
-                  showMenu(
-                    color:  darkMode ? Colors.grey : Colors.white,
-                    context: context,
-                    position: RelativeRect.fromRect(
-                      _tapPosition & const Size(40, 40), // smaller rect, the touch area
-                      Offset.zero & overlay.size   // Bigger rect, the entire screen
-                    ),
-                    items: <PopupMenuEntry<WhyFarther>>[
-                      PopupMenuItem<WhyFarther>(
-                        value: WhyFarther.liste,
-                        child: ListTile(
-                          onTap: ()async{
-                            await db.deleteNote(notes[index].id ?? 0);
-                            setState((){});
-                          },
-                          title: Text('Delete', style: TextStyle(color: color2))
-                        ),               
-                      ),
-                      PopupMenuItem<WhyFarther>(
-                        value: WhyFarther.grille,
-                        child: ListTile(
-                          onTap: ()async{
-                            await Navigator.push(context,MaterialPageRoute(builder : (context){return NoteDetailPage(database: db, update: true, index: index);}));
-                            setState((){});
-                          },
-                          title: Text('Edit', style: TextStyle(color: color2))
-                        ),   
-                      ),            
-                    ],
-                  );
-                },
-                onTapDown: _storePosition,
-                onTap: () async{
-                    await Navigator.push(context,MaterialPageRoute(builder : (context){return NoteDetailPage(database: db, update: true, index: index);}));
-                    setState(() {
-
-                    });
-                },
-                child: Card(
-                elevation: 0,
-                margin: EdgeInsets.only(bottom: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                color: color3,
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 150, maxHeight: 110),
-                  padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(notes[index].title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color2)),
-                      SizedBox(height: 5,),
-                      Expanded(child: Text(notes[index].content,overflow: TextOverflow.fade, style: TextStyle(fontSize: 16, color: color2))),
-                      SizedBox(height: 5,),
-                      Align(alignment: Alignment.bottomRight,
-                        child: Text(DateFormat.yMMMEd().format(notes[index].date), style: TextStyle(fontSize: 12, color: color2, fontWeight: FontWeight.w300))
-                      )
-                    ]
-                  ),
-                )
-                  )
-              );
-            },
-          );
+          if (_selection == WhyFarther.grille) 
+            return GridNote(database: db);
+          else 
+            return ListNote(database: db);
         }
         return Center();
       }

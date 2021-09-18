@@ -78,7 +78,7 @@ class Db{
     );
   }
 }
-class Note {
+class Note {                                                                                                                                                                                                                                                                                                                                                                                                   
   late int? id;
   late  String title;
   late String content;
@@ -109,4 +109,5 @@ class Note {
     return 'Note{id: $id, title: $title, content: $content, data: ${date.toString()}}';
   }
 }
+
 List <Note> notes= [];
